@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  id         String     @id @default(cuid())
+  name       String
+  email      String     @unique
+  phone      String?
+  bio        String     @default("")
+  avatarUrl  String?
+  agency     String     @default("Villaage Realty")
+  verified   Boolean    @default(false)
+  rating     Float      @default(0)
+  salesCount Int        @default(0)
+  joinedAt   DateTime   @default(now())
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  enquiries  Enquiry[]
+  properties Property[]
+  ratings    Rating[]
+
+  @@index([email])
+}
+
+model Property {
+  id            String         @id @default(cuid())
+  refCode       String         @unique @default(cuid())
+  slug          String         @unique
+  title         String
+  description   String         @default("")
+  advertType    String         @default("For Sale")
+  propertyType  String         @default("House")
+  price         Float          @default(0)
+  taxPercent    Float          @default(0)
+  country       String         @default("United Kingdom")
+  city          String         @default("London")
+  postalCode    String         @default("")
+  streetAddress String         @default("")
+  bedrooms      Int            @default(1)
+  bathrooms     Float          @default(1)
+  totalFloors   Int            @default(1)
+  plotArea      Float          @default(0)
+  coverPhoto    String
+  photo1        String?
+  photo2        String?
+  photo3        String?
+  photo4        String?
+  published     Boolean        @default(true)
+  featured      Boolean        @default(false)
+  views         Int            @default(0)
+  savedCount    Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  agentId       String
+  enquiries     Enquiry[]
+  agent         Agent          @relation(fields: [agentId], references: [id])
+  viewsLog      PropertyView[]
+  ratings       Rating[]
+
+  @@index([advertType])
+  @@index([propertyType])
+  @@index([city])
+  @@index([featured])
+  @@index([published])
+}
+
+model Rating {
+  id            String   @id @default(cuid())
+  propertyId    String
+  agentId       String?
+  reviewerName  String
+  reviewerEmail String?
+  score         Int
+  comment       String   @default("")
+  createdAt     DateTime @default(now())
+  agent         Agent?   @relation(fields: [agentId], references: [id])
+  property      Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+}
+
+model Enquiry {
+  id         String   @id @default(cuid())
+  propertyId String
+  agentId    String
+  name       String
+  email      String
+  phone      String?
+  message    String
+  moveDate   String?
+  status     String   @default("new")
+  createdAt  DateTime @default(now())
+  agent      Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@index([agentId])
+}
+
+model PropertyView {
+  id         String   @id @default(cuid())
+  propertyId String
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+}
